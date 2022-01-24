@@ -63,7 +63,7 @@ class NaiveBayes:
         neg = self.train.query('target == -1')
         self.p_c['pos'] = len(pos) / len(self.train)
         self.p_c['neg'] = len(neg) / len(self.train)
-        print(f'{self.p_c = }')
+        # print(f'{self.p_c = }')
 
         # P(w_i|c)を計算
         # word_ratio = {'pos': {'samurai': 0.5, ... }, }
@@ -71,7 +71,7 @@ class NaiveBayes:
         cnt_cls = {}
         cnt_cls['pos'] = self._calc_cnt(pos)
         cnt_cls['neg'] = self._calc_cnt(neg)
-        print(f'{cnt_cls["pos"]["samurai"][0] = }')
+        # print(f'{cnt_cls["pos"]["samurai"][0] = }')
 
         self.p_wi_c = {}
         for cls, cnt in cnt_cls.items():
@@ -80,7 +80,7 @@ class NaiveBayes:
                 # Laplace Smoothingを実行
                 self.p_wi_c[cls][word] = \
                     (sum(lst) + 1) / (len(lst) + self.vocab_size)
-        print(f'{self.p_wi_c["pos"]["samurai"] = :.3f}')
+        # print(f'{self.p_wi_c["pos"]["samurai"] = :.3f}')
 
     def _calc_cnt(self, data):
         cnt = {}
@@ -121,15 +121,15 @@ if __name__ == '__main__':
     test = pd.read_table('data/titles-en-test.labeled',
                          names=['target', 'sentence'])
 
-    # print('Rule Base:')
-    # rb = RuleBase()
-    # test_features = rb.create_features(test)
-    # _, acc = rb.predict(test_features)
-    # print(f'{acc:.3f}')
-    # print('------')
+    print('Rule Base:')
+    rb = RuleBase()
+    test_features = rb.create_features(test)
+    _, acc = rb.predict(test_features)
+    print(f'{acc:.3f}')
+    print('------')
 
     print('Naive Bayes:')
     nb = NaiveBayes()
-    nb.fit(train)
+    nb.fit(train, vocab_min_freq=0)
     _, acc = nb.predict(test)
     print(f'{acc:.3f}')
