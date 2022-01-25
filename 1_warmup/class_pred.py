@@ -66,8 +66,6 @@ class NaiveBayes:
         # print(f'{self.p_c = }')
 
         # P(w_i|c)を計算
-        # word_ratio = {'pos': {'samurai': 0.5, ... }, }
-        # ↑のように辞書に確率を入れていく方法も考えたが、そうすると語彙の数だけ各文の中を探しに行くことになり、計算量が増えすぎる。そこで、cnt_cls['pos'/'neg']の中に入れたcnt['word'][i]にインデックスiの文にwordが出てきたかどうかを記録する。多少メモリは食うが、time complexityを抑えられるほか、分かりやすい
         cnt_cls = {}
         cnt_cls['pos'] = self._calc_cnt(pos)
         cnt_cls['neg'] = self._calc_cnt(neg)
