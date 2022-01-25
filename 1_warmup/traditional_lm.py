@@ -1,42 +1,61 @@
-# import numpy as np
-# import pandas as pd
+import numpy as np
 from collections import Counter
 from pprint import pprint
+import copy
 
 
 class Lm:
-    def fit(self, train, n=2):
-        self.train = train
-        self.ngram_freq = self._create_ngram(n)
-        self._calc_prob()
+    def __init__(self, n=2):
+        self.n = n
 
-    def _create_ngram(self, n):
+    def fit(self, train):
+        if self.n <= 1:
+            raise Exception('Set an integer greater than 1')
+        self.unigram_freq = self._create_ngram(train, 1)
+        self.ngram_freq = self._create_ngram(train, self.n)
+        self._calc_params()
+
+    def _create_ngram(self, text, n):
         counter = Counter()
-        for sent in self.train:
+        for sent in text:
             lst = [' '.join(sent[i:i + n]) for i in range(len(sent) - n + 1)]
             counter += Counter(lst)
         return counter.most_common()
 
-    def _calc_prob(self):
-        cnt = {}
+    def _calc_params(self):
+        freq_total = sum([tpl[1] for tpl in self.unigram_freq])
+        self.unigram_prob = {token: freq / freq_total for token, freq
+                             in self.unigram_freq}
+        # pprint(self.unigram_prob)
+
+        ngram_cnt = {}
         for ngram, freq in self.ngram_freq:
             # 最後のスペースで分割。nminus_gramは、正確にはngramの条件の部分であるn - 1語のsequence
             nminus_gram, w = ngram.rsplit(' ', 1)
-            if dct := cnt.get(nminus_gram):
+            if dct := ngram_cnt.get(nminus_gram):
                 dct.update({w: freq})
             else:
-                cnt[nminus_gram] = {w: freq}
-        pprint(cnt)
+                ngram_cnt[nminus_gram] = {w: freq}
+        # pprint(ngram_cnt)
 
-        prob = cnt.copy()
-        for nminus_gram, dct in prob.items():
+        self.ngram_prob = copy.deepcopy(ngram_cnt)
+        for nminus_gram, dct in self.ngram_prob.items():
             nminus_gram_cnt = sum(dct.values())
             for w, cnt in dct.items():
                 dct[w] = cnt / nminus_gram_cnt
-        pprint(prob)
+        # pprint(self.ngram_prob)
 
-    def predict(self):
-        pass
+    def predict(self, test):
+        pred = []
+        # print(self._create_ngram(test, self.n))
+        for sent in test:
+            for i in range(len(sent) - self.n + 1):
+                self._calc_prob(' '.join(sent[i:i + self.n]))
+
+    def _calc_prob(self, ngram):
+        cond, w = ngram.rsplit(' ', 1)
+        print(cond, w)
+        # return likelihood_disc + lambd * p_contin
 
 
 if __name__ == '__main__':
@@ -45,5 +64,6 @@ if __name__ == '__main__':
     with open('data/wiki-en-test.word') as file:
         test = [['<s>'] + line.lower().split() + ['</s>'] for line in file]
 
-    trigram = Lm()
-    trigram.fit(train, n=3)
+    trigram_lm = Lm(n=3)
+    trigram_lm.fit(train)
+    trigram_lm.predict(train)  # あとでtestに直す
