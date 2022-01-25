@@ -94,7 +94,7 @@ class NaiveBayes:
         return cnt
 
     def predict(self, test):
-        self.pred = []
+        pred = []
         for sent in test['sentence']:
             log_p_pos = np.log(self.p_c['pos'])
             log_p_neg = np.log(self.p_c['neg'])
@@ -105,14 +105,14 @@ class NaiveBayes:
                 log_p_neg += np.log(self.p_wi_c['neg'][word])
             # print(f'{log_p_pos = }, {log_p_neg = }')
             if log_p_pos > log_p_neg:
-                self.pred.append(1)
+                pred.append(1)
             else:
-                self.pred.append(-1)
+                pred.append(-1)
 
-        is_accurate = test['target'] == pd.Series(self.pred)
+        is_accurate = test['target'] == pd.Series(pred)
         acc = is_accurate.sum() / is_accurate.count()
 
-        return self.pred, acc
+        return pred, acc
 
 
 if __name__ == '__main__':
