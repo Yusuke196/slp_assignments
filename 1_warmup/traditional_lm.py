@@ -71,14 +71,14 @@ class Lm:
                 dct[w] = max(cnt - self.d, 0) / nminus_gram_cnt
         # pprint(self.ngram_prob)
 
-    def entropy(self, test: list):
+    def calc_entropy(self, test: list):
         probs = []
         # print(self._create_ngram(test, self.n))
         for sent in test:
             for i in range(len(sent) - self.n + 1):
                 prob = self._calc_prob(' '.join(sent[i:i + self.n]))
-                probs.append(np.log(prob))
-        return -1 / (len(sent) - self.n + 1) * sum(probs)
+                probs.append(prob)
+        return -1 / len(probs) * sum(np.log(probs))
 
     def _calc_prob(self, ngram: str):
         context, w = ngram.rsplit(' ', 1)
@@ -116,5 +116,5 @@ if __name__ == '__main__':
     trigram_lm = Lm(n=3)
     trigram_lm.fit(train)
     test_unk = trigram_lm.replace_rare(test)
-    entropy = trigram_lm.entropy(test_unk)
+    entropy = trigram_lm.calc_entropy(test_unk)
     print(f'{entropy:.3f}')
