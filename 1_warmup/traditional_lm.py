@@ -10,26 +10,6 @@ class Lm:
         self.ngram_freq = self._create_ngram(n)
         self._calc_prob()
 
-    # def _create_vocab(self, vocab_min_freq):
-    #     counter = Counter()
-    #     for sent in self.train:
-    #         counter += Counter(sent)
-    #     counter = self._reduce_vocab(counter, vocab_min_freq)
-
-    #     self.token_freqs = counter.most_common()
-    #     self.token_to_idx = {tpl[0]: idx for idx, tpl in enumerate(self.token_freqs)}
-
-    # def _reduce_vocab(self, counter, vocab_min_freq):
-    #     before_reduction = len(counter)
-    #     tokens_to_rm = stopwords.words('english') + \
-    #         [c for c in string.punctuation] + ['-LRB-', '-RRB-', "''", '``']
-    #     keys_to_del = [key for key, count in counter.items()
-    #                    if count <= vocab_min_freq or key in tokens_to_rm]
-    #     for key in keys_to_del:
-    #         del counter[key]
-    #     print(f'vocab: {before_reduction = }, after_reduction = {len(counter)}')
-    #     return counter
-
     def _create_ngram(self, n):
         counter = Counter()
         for sent in self.train:
