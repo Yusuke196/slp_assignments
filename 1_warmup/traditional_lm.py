@@ -16,11 +16,12 @@ class Lm:
     def _create_vocab(self, text):
         if self.n <= 1:
             raise Exception('Set an integer greater than 1')
-        unigram_freq = self._create_ngram(text, 1)
-        text_unk = self.replace_rare(text, unigram_freq)
+        unigram_freq_raw = self._create_ngram(text, 1)
+        text_unk = self.replace_rare_unigram(text, unigram_freq_raw)
         self.unigram_freq = self._create_ngram(text_unk, 1)
-        self.ngram_freq = self._create_ngram(text_unk, self.n)
-        # self.nminusgram_freq = self._create_ngram(text_unk, self.n - 1)
+        ngram_freq_raw = self._create_ngram(text_unk, self.n)
+        self.ngram_freq = self._replace_rare_ngram(ngram_freq_raw)
+        self.nminusgram_freq = self._create_ngram(text_unk, self.n - 1)
 
     def _create_ngram(self, text: list, n):
         counter = Counter()
@@ -29,7 +30,7 @@ class Lm:
             counter += Counter(lst)
         return dict(counter.most_common())
 
-    def replace_rare(self, text: list, unigram_freq=None):
+    def replace_rare_unigram(self, text: list, unigram_freq: dict = None):
         if unigram_freq is None:
             unigram_freq = self.unigram_freq
         '''頻度1以下の単語をUNKに置き換えて返す'''
@@ -48,6 +49,9 @@ class Lm:
             text_unk.append(lst)
         return text_unk
 
+    def _replace_replace_rare_ngram(self, ngram_freq: dict):
+        pass
+
     def _calc_params(self):
         freq_total = sum(self.unigram_freq.values())
         self.unigram_prob = {token: freq / freq_total for token, freq
@@ -64,8 +68,8 @@ class Lm:
                 ngram_cnt[nminus_gram] = {w: freq}
         # pprint(ngram_cnt)
 
-        self.ngram_prob = copy.deepcopy(ngram_cnt)
-        for nminus_gram, dct in self.ngram_prob.items():
+        self.ngram_prob_disc = copy.deepcopy(ngram_cnt)
+        for nminus_gram, dct in self.ngram_prob_disc.items():
             nminus_gram_cnt = sum(dct.values())
             for w, cnt in dct.items():
                 dct[w] = max(cnt - self.d, 0) / nminus_gram_cnt
@@ -80,31 +84,36 @@ class Lm:
                 probs.append(prob)
         return -1 / len(probs) * sum(np.log(probs))
 
+    # Laplace Smoothing
     def _calc_prob(self, ngram: str):
-        context, w = ngram.rsplit(' ', 1)
-        # print(context, w)
-        likelihood_disc = 0.5  # 仮
-        lambd = self._calc_lambd(context)
-        p_contin = self._calc_p_contin(w)
-        return likelihood_disc + lambd * p_contin
+        self.ngram_freq.get()
 
-    def _calc_lambd(self, context: str):
-        num_of_w_types = 0  # 与えられたcontextの後で出てくるwのユニーク数
-        num_of_ngram_types_w_given_context = 0  # 分母
-        for ngram, freq in self.ngram_freq.items():
-            if ngram.split(' ', 1) == context:
-                num_of_w_types += 1
-                num_of_ngram_types_w_given_context += freq
-        return self.d / num_of_ngram_types_w_given_context * num_of_w_types
+    # Kneser-Ney Smoothing
+    # def _calc_prob(self, ngram: str):
+    #     context, w = ngram.rsplit(' ', 1)
+    #     # print(context, w)
+    #     likelihood_disc = self.ngram_prob_disc[context][w]
+    #     lambd = self._calc_lambd(context)
+    #     p_contin = self._calc_p_contin(w)
+    #     return likelihood_disc + lambd * p_contin
 
-    def _calc_p_contin(self, w: str):
-        # 要メモ化
-        num_of_context_types = 0  # 分子
-        for ngram in self.ngram_freq.keys():
-            if ngram.split(' ', 1)[0] == w:
-                num_of_context_types += 1
-        num_of_ngram_types = len(self.ngram_freq)  # 分母
-        return num_of_context_types / num_of_ngram_types
+    # def _calc_lambd(self, context: str):
+    #     num_of_w_types = 0  # 与えられたcontextの後で出てくるwのユニーク数
+    #     num_of_ngram_types_w_given_context = 0  # 分母
+    #     for ngram, freq in self.ngram_freq.items():
+    #         if ngram.split(' ', 1) == context:
+    #             num_of_w_types += 1
+    #             num_of_ngram_types_w_given_context += freq
+    #     return self.d / num_of_ngram_types_w_given_context * num_of_w_types
+
+    # def _calc_p_contin(self, w: str):
+    #     # 要メモ化
+    #     num_of_context_types = 0  # 分子
+    #     for ngram in self.ngram_freq.keys():
+    #         if ngram.split(' ', 1)[0] == w:
+    #             num_of_context_types += 1
+    #     num_of_ngram_types = len(self.ngram_freq)  # 分母
+    #     return num_of_context_types / num_of_ngram_types
 
 
 if __name__ == '__main__':
@@ -115,6 +124,6 @@ if __name__ == '__main__':
 
     trigram_lm = Lm(n=3)
     trigram_lm.fit(train)
-    test_unk = trigram_lm.replace_rare(test)
+    test_unk = trigram_lm.replace_rare_unigram(test)
     entropy = trigram_lm.calc_entropy(test_unk)
     print(f'{entropy:.3f}')
