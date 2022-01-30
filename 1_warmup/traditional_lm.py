@@ -21,7 +21,8 @@ class Lm:
         self.unigram_freq = self._create_ngram(text_unk, 1)
         ngram_freq_raw = self._create_ngram(text_unk, self.n)
         self.ngram_freq = self._replace_rare_ngram(ngram_freq_raw)
-        self.nminusgram_freq = self._create_ngram(text_unk, self.n - 1)
+        nminusgram_freq_raw = self._create_ngram(text_unk, self.n - 1)
+        self.nminusgram_freq = self._replace_rare_ngram(nminusgram_freq_raw)
 
     def _create_ngram(self, text: list, n):
         counter = Counter()
@@ -49,8 +50,17 @@ class Lm:
             text_unk.append(lst)
         return text_unk
 
-    def _replace_replace_rare_ngram(self, ngram_freq: dict):
-        pass
+    def _replace_rare_ngram(self, ngram_freq_raw: dict):
+        ngram_freq = {}
+        unk_count = 0
+        for ngram, freq in ngram_freq_raw.items():
+            if freq > 1:
+                ngram_freq.update({ngram: freq})
+            else:
+                unk_count += 1
+        ngram_freq.update({'<UNK NGRAM>': unk_count})
+
+        return ngram_freq
 
     def _calc_params(self):
         freq_total = sum(self.unigram_freq.values())
