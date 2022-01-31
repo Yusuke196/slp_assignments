@@ -20,6 +20,7 @@ def load(path: str) -> list[list]:
 def calc_cnts(train: list[list]) -> tuple[dict]:
     transition_cnt = {}
     emission_cnt = {}
+    unitag_cnt = {}
     for tpls in train:
         # 高速化の余地があるが、可読性を損ないそうなので差し当たりは現状維持
         for i in range(1, len(tpls)):
@@ -34,20 +35,28 @@ def calc_cnts(train: list[list]) -> tuple[dict]:
             emission_cnt.setdefault(tag, {})
             emission_cnt[tag].setdefault(token, 0)
             emission_cnt[tag][token] += 1
-    return transition_cnt, emission_cnt
+
+            unitag_cnt.setdefault(tag, 0)
+            unitag_cnt[tag] += 1
+    return transition_cnt, emission_cnt, unitag_cnt
 
 
 # 二次元の辞書の深い方の次元にある数値の列を対象に、確率への変換操作を繰り返す
 def calc_probs(cnts: tuple[dict], save: bool = False) -> list[dict]:
-    # interpolationで使用するNを、ここではtrainに含まれるtokenのユニーク数とする
+    tra_cnt, emi_cnt, tag_cnt = cnts
     uniq_tokens = set()
-    for dct in cnts[1].values():
+    for dct in emi_cnt.values():
         uniq_tokens |= set(dct.keys())
+    # interpolationで使用するNを、ここではtrainに含まれるtokenのユニーク数とする
     n = len(uniq_tokens)
 
-    # transition_prob, emission_probの順で追加
-    # transition_prob[t-1][t]にP(t|t-1)、emission_prob[t][w]にP(w|t)を記録
-    probs = [_calc_prob(cnts[0]), _calc_prob(cnts[1], transmission=False, n=n)]
+    # tra_prob, emission_prob, unitag_probの順で追加していく
+    # tra_prob[t-1][t]にP(t|t-1)、emission_prob[t][w]にP(w|t)、unitag_prob[t]にP(t)を記録
+    probs = [_calc_prob(tra_cnt), _calc_prob(emi_cnt, transmission=False, n=n)]
+    total = sum(tag_cnt.values())
+    unitag_prob = {tag: cnt / total for tag, cnt in tag_cnt.items()}
+    probs.append(unitag_prob)
+
     if save:
         with open('models/probs.json', 'w') as file:
             json.dump(probs, file, indent=4)
@@ -70,22 +79,23 @@ def _calc_prob(cnt: dict[str, dict], transmission=True, n=None) -> dict[str, dic
 
 
 def predict(sent: list[tuple], probs: list[dict]):
-    transition_prob, emission_prob = probs
-    uniq_pos = set(transition_prob.keys()) | set(['</s>'])
-    viterbi = [[0] * len(uniq_pos) for _ in range(len(sent))]
+    tra_prob, emi_prob, utag_prob = probs
+    uniq_tag = set(utag_prob.keys())
+    print(f'{len(uniq_tag) = }')
+    viterbi = [[0] * len(uniq_tag) for _ in range(len(sent))]
 
     for t in range(len(sent)):
-        for pos_i, pos in enumerate(uniq_pos):
+        for tag_i, tag in enumerate(uniq_tag):
             if t == 0:
-                viterbi[t][pos_i] = emission_prob[pos].get(sent[t][0], 0)
+                viterbi[t][tag_i] = emi_prob[tag].get(sent[t][0], 0)
             else:
                 probs = []
-                for prev_pos in uniq_pos:
+                for prev_tag in (uniq_tag - {'</s>'}):
                     # P(w|t)P(t|t-1)
-                    ep = emission_prob[pos].get(sent[t][0], emission_prob[pos]['<UNK>'])
-                    tp = transition_prob[prev_pos][pos]
+                    ep = emi_prob[tag].get(sent[t][0], emi_prob[tag]['<UNK>'])
+                    tp = tra_prob[prev_tag].get(tag, 0)
                     probs.append(ep * tp)
-                viterbi[t][pos_i] = max(probs)
+                viterbi[t][tag_i] = max(probs)
     pprint(viterbi[:2])
 
 
