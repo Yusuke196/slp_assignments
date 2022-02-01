@@ -4,7 +4,6 @@ from pprint import pprint
 
 
 def load(path: str) -> list[list]:
-    # is_train = 'train' in path
     with open(path) as file:
         res = []
         for l in file:
@@ -12,8 +11,6 @@ def load(path: str) -> list[list]:
             tokens.insert(0, ('<s>', '<s>'))
             tokens.append(('</s>', '</s>'))
             res.append(tokens)
-        # else:
-        #     res = [['<s>'] + l.lower().split() + ['</s>'] for l in file]
     return res
 
 
