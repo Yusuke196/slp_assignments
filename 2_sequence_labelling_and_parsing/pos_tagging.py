@@ -83,9 +83,11 @@ def predict(sent: list[tuple], probs: list[dict]):
     tra_prob, emi_prob, utag_prob = probs
     uniq_tag = set(utag_prob.keys())
     best_score = []
+    prev_tags_for_best = []
 
     for w_i in range(len(sent)):
         best_score.append({key: -np.inf for key in uniq_tag})
+        prev_tags_for_best.append({key: None for key in uniq_tag})
         for tag in uniq_tag:
             if w_i == 0:
                 best_score[w_i][tag] = _log(emi_prob[tag].get(sent[w_i][0], 0))
@@ -95,10 +97,13 @@ def predict(sent: list[tuple], probs: list[dict]):
                     # P(w|t)P(t|t-1)
                     prev_score = best_score[w_i - 1][prev_tag]
                     tp = tra_prob[prev_tag].get(tag, 0)
-                    lprobs.append(prev_score + _log(tp))
+                    lprobs.append((prev_score + _log(tp), prev_tag))
                 ep = emi_prob[tag].get(sent[w_i][0], emi_prob[tag]['<UNK>'])
-                best_score[w_i][tag] = max(lprobs) * ep
-    # pprint(best_score[:2])
+                max_score, prev_tag_for_max = max(lprobs)
+                best_score[w_i][tag] = max_score * ep
+                prev_tags_for_best[w_i][tag] = prev_tag_for_max
+    # pprint(f'{best_score[:2] = }')
+    # pprint(f'{prev_tags_for_best[:2] = }')
 
 
 def _log(num: float) -> float:
