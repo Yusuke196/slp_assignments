@@ -105,6 +105,17 @@ def predict(sent: list[tuple], probs: list[dict]):
     # pprint(f'{best_score[:2] = }')
     # pprint(f'{prev_tags_for_best[:2] = }')
 
+    scores_last_tag = best_score[len(sent) - 1]
+    last_token_pred = max(scores_last_tag, key=scores_last_tag.get)
+    pprint(f'{last_token_pred = }')  # </s>になってほしい
+
+    res = []
+    tag_pred = last_token_pred
+    for w_i in range(len(sent) - 1, -1, -1):
+        res.insert(0, tag_pred)
+        tag_pred = prev_tags_for_best[w_i][tag_pred]
+    pprint(f'{res = }')
+
 
 def _log(num: float) -> float:
     if num == 0:
@@ -119,4 +130,5 @@ if __name__ == '__main__':
     probs = calc_probs(cnts, save=True)
 
     test = load('data/wiki-en-test.norm_pos')[0]
+    pprint(f'{test = }')
     predict(test, probs)
