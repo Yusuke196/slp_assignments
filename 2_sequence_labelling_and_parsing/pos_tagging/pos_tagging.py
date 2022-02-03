@@ -14,7 +14,7 @@ def load(path: str) -> list[list]:
     return res
 
 
-# transmission_probつまりP(t_i|t_{i-1})と、emission_probつまりP(o_i|t_i)を求めるための準備
+# transition_probつまりP(t_i|t_{i-1})と、emission_probつまりP(o_i|t_i)を求めるための準備
 def calc_cnts(train: list[list]) -> tuple[dict]:
     transition_cnt = {}
     emission_cnt = {}
@@ -48,12 +48,12 @@ def calc_probs(cnts: tuple[dict], save: bool = False) -> list[dict]:
     # interpolationで使用するNを、ここではtrainに含まれるtokenのユニーク数とする
     n = len(uniq_tokens)
 
-    # tra_prob, emission_prob, unitag_probの順で追加していく
-    # tra_prob[t-1][t]にP(t|t-1)、emission_prob[t][w]にP(w|t)、unitag_prob[t]にP(t)を記録
-    probs = [_calc_prob(tra_cnt), _calc_prob(emi_cnt, transmission=False, n=n)]
+    # transition_prob, emission_prob, unitag_probの順で追加していく
+    # tra_prob[t-1][t]にP(t|t-1)、emi_prob[t][w]にP(w|t)、utag_prob[t]にP(t)を記録
+    probs = [_calc_prob(tra_cnt), _calc_prob(emi_cnt, transition=False, n=n)]
     total = sum(tag_cnt.values())
-    unitag_prob = {tag: cnt / total for tag, cnt in tag_cnt.items()}
-    probs.append(unitag_prob)
+    utag_prob = {tag: cnt / total for tag, cnt in tag_cnt.items()}
+    probs.append(utag_prob)
 
     if save:
         with open('models/probs.json', 'w') as file:
@@ -61,13 +61,13 @@ def calc_probs(cnts: tuple[dict], save: bool = False) -> list[dict]:
     return probs
 
 
-def _calc_prob(cnt: dict[str, dict], transmission=True, n=None) -> dict[str, dict]:
+def _calc_prob(cnt: dict[str, dict], transition=True, n=None) -> dict[str, dict]:
     prob = {}
     lambd = 0.7
 
     for k, dct in cnt.items():
         total = sum(dct.values())
-        if transmission:
+        if transition:
             prob[k] = {token: cnt / total for token, cnt in dct.items()}
         else:
             # emission_probについては、interpolationによるsmoothingを実行
@@ -109,7 +109,7 @@ def predict_one(sent: list[tuple], probs: list[dict]):
 
     scores_last_tag = best_score[len(sent) - 1]
     last_token_pred = max(scores_last_tag, key=scores_last_tag.get)
-    pprint(f'{last_token_pred = }')  # </s>になってほしい
+    # pprint(f'{last_token_pred = }')  # </s>になってほしい
 
     res = []
     tag_pred = last_token_pred
