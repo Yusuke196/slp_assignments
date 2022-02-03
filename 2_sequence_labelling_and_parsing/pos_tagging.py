@@ -76,7 +76,7 @@ def _calc_prob(cnt: dict[str, dict], transmission=True, n=None) -> dict[str, dic
     return prob
 
 
-def predict(sent: list[tuple], probs: list[dict]):
+def predict_one(sent: list[tuple], probs: list[dict]):
     tra_prob, emi_prob, utag_prob = probs
     uniq_tag = set(utag_prob.keys())
     best_score = []
@@ -128,4 +128,4 @@ if __name__ == '__main__':
 
     test = load('data/wiki-en-test.norm_pos')[0]
     pprint(f'{test = }')
-    predict(test, probs)
+    predict_one(test, probs)
