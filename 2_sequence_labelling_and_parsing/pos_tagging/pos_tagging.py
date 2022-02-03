@@ -76,6 +76,11 @@ def _calc_prob(cnt: dict[str, dict], transmission=True, n=None) -> dict[str, dic
     return prob
 
 
+def load_probs(path):
+    with open(path) as file:
+        return json.load(file)
+
+
 def predict_one(sent: list[tuple], probs: list[dict]):
     tra_prob, emi_prob, utag_prob = probs
     uniq_tag = set(utag_prob.keys())

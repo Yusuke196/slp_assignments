@@ -18,6 +18,7 @@ def test_predict():
         ('.', '.'),
         ('</s>', '</s>'),
     ]
-    pred = pos_tagging.predict_one(test)
+    probs = pos_tagging.load_probs('models/probs.json')
+    pred = pos_tagging.predict_one(test, probs)
     pprint(f'{pred = }')
     assert 1 == 1
