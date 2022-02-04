@@ -19,9 +19,9 @@ def test_calc_probs():
             ('.', '.'),
         ]
     ]
-    probs = pt.calc_probs(pt.calc_cnts(train), save_path='tests/probs.json')
+    lambd = 0.9
+    probs = pt.calc_probs(pt.calc_cnts(train), emi_lambd=lambd, save_path='tests/probs.json')
     tra_prob, emi_prob = probs
-    lambd = 0.7
     n = 8
 
     assert tra_prob['<s>']['vbp'] == 1

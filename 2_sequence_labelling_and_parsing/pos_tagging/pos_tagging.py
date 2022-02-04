@@ -35,7 +35,7 @@ def calc_cnts(train: list[list]) -> tuple[dict]:
 
 
 # 二次元の辞書の深い方の次元にある数値の列を対象に、確率への変換操作を繰り返す
-def calc_probs(cnts: tuple[dict], save_path: str = '') -> list[dict]:
+def calc_probs(cnts: tuple[dict], emi_lambd: float, save_path: str = '') -> list[dict]:
     tra_cnt, emi_cnt = cnts
     # interpolationで使用するNを、ここではtrainに含まれるtokenのユニーク数とする
     uniq_tokens = set()
@@ -45,7 +45,7 @@ def calc_probs(cnts: tuple[dict], save_path: str = '') -> list[dict]:
 
     # transition_prob, emission_probの順で追加していく
     # tra_prob[t-1][t]にP(t|t-1)、emi_prob[t][w]にP(w|t)を記録
-    probs = [_calc_prob(tra_cnt), _calc_prob(emi_cnt, transition=False, n=n)]
+    probs = [_calc_prob(tra_cnt), _calc_prob(emi_cnt, transition=False, lambd=emi_lambd, n=n)]
 
     if save_path != '':
         with open(save_path, 'w') as file:
@@ -53,9 +53,10 @@ def calc_probs(cnts: tuple[dict], save_path: str = '') -> list[dict]:
     return probs
 
 
-def _calc_prob(cnt: dict[str, dict], transition=True, n=None) -> dict[str, dict]:
+def _calc_prob(
+    cnt: dict[str, dict], transition: bool = True, lambd: float = None, n: int = None
+) -> dict[str, dict]:
     prob = {}
-    lambd = 0.7
     # pprint(f'{n = }')
 
     for k, dct in cnt.items():
@@ -123,7 +124,7 @@ def _log(num: float) -> float:
 if __name__ == '__main__':
     train = load('data/wiki-en-train.norm_pos')
     cnts = calc_cnts(train)
-    probs = calc_probs(cnts, save_path='models/probs.json')
+    probs = calc_probs(cnts, emi_lambd=0.7, save_path='models/probs.json')
 
     test = load('data/wiki-en-test.norm_pos')[0]
     pprint(f'{test = }')
