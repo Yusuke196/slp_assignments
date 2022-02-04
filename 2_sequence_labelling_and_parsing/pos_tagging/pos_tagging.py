@@ -18,7 +18,6 @@ def load(path: str) -> list[list]:
 def calc_cnts(train: list[list]) -> tuple[dict]:
     transition_cnt = {}
     emission_cnt = {}
-    unitag_cnt = {}
     for tpls in train:
         # 高速化の余地があるが、可読性を損ないそうなので差し当たりは現状維持
         for i in range(1, len(tpls)):
@@ -33,27 +32,21 @@ def calc_cnts(train: list[list]) -> tuple[dict]:
             emission_cnt.setdefault(tag, {})
             emission_cnt[tag].setdefault(token, 0)
             emission_cnt[tag][token] += 1
-
-            unitag_cnt.setdefault(tag, 0)
-            unitag_cnt[tag] += 1
-    return transition_cnt, emission_cnt, unitag_cnt
+    return transition_cnt, emission_cnt
 
 
 # 二次元の辞書の深い方の次元にある数値の列を対象に、確率への変換操作を繰り返す
 def calc_probs(cnts: tuple[dict], save_path: str = '') -> list[dict]:
-    tra_cnt, emi_cnt, tag_cnt = cnts
+    tra_cnt, emi_cnt = cnts
     # interpolationで使用するNを、ここではtrainに含まれるtokenのユニーク数とする
     uniq_tokens = set()
     for dct in emi_cnt.values():
         uniq_tokens |= set(dct.keys())
     n = len(uniq_tokens)
 
-    # transition_prob, emission_prob, unitag_probの順で追加していく
-    # tra_prob[t-1][t]にP(t|t-1)、emi_prob[t][w]にP(w|t)、utag_prob[t]にP(t)を記録
+    # transition_prob, emission_probの順で追加していく
+    # tra_prob[t-1][t]にP(t|t-1)、emi_prob[t][w]にP(w|t)を記録
     probs = [_calc_prob(tra_cnt), _calc_prob(emi_cnt, transition=False, n=n)]
-    total = sum(tag_cnt.values())
-    utag_prob = {tag: cnt / total for tag, cnt in tag_cnt.items()}
-    probs.append(utag_prob)
 
     if save_path != '':
         with open(save_path, 'w') as file:
@@ -83,8 +76,8 @@ def load_probs(path):
 
 
 def predict_one(sent: list[tuple], probs: list[dict]) -> list[str]:
-    tra_prob, emi_prob, utag_prob = probs
-    uniq_tag = set(utag_prob.keys())
+    tra_prob, emi_prob = probs
+    uniq_tag = set(tra_prob.keys())
     best_score = []
     prev_tags_for_best = []
 
@@ -117,7 +110,7 @@ def predict_one(sent: list[tuple], probs: list[dict]) -> list[str]:
     for w_i in range(len(sent) - 1, -1, -1):
         res.insert(0, tag_pred)
         tag_pred = prev_tags_for_best[w_i][tag_pred]
-    # pprint(f'{res = }')
+    pprint(f'{res = }')
     return res
 
 
