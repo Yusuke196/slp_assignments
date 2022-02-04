@@ -3,5 +3,5 @@ __pycache__
 .pytest_cache
 memo.md
 sandbox.ipynb
-*/data/*
+*/*/data/*
 neubig_slides
