@@ -9,7 +9,6 @@ def load(path: str) -> list[list]:
         for l in file:
             tokens = [tuple(token.split('_')) for token in l.lower().split()]
             tokens.insert(0, ('<s>', '<s>'))
-            tokens.append(('</s>', '</s>'))
             res.append(tokens)
     return res
 
@@ -89,7 +88,7 @@ def predict_one(sent: list[tuple], probs: list[dict]) -> list[str]:
                 best_score[w_i][tag] = _log(emi_prob[tag].get(sent[w_i][0], 0))
             else:
                 lprobs = []
-                for prev_tag in uniq_tag - {'</s>'}:
+                for prev_tag in uniq_tag:
                     # P(w|t)P(t|t-1)
                     prev_score = best_score[w_i - 1][prev_tag]
                     tp = tra_prob[prev_tag].get(tag, 0)

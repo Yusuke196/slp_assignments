@@ -17,13 +17,12 @@ def test_calc_probs():
             ('pattern', 'nn'),
             ('recognition', 'nn'),
             ('.', '.'),
-            ('</s>', '</s>'),
         ]
     ]
     probs = pt.calc_probs(pt.calc_cnts(train), save_path='tests/probs.json')
     tra_prob, emi_prob = probs
     lambd = 0.7
-    n = 9
+    n = 8
 
     assert tra_prob['<s>']['vbp'] == 1
     assert tra_prob['nn']['in'] == 1 / 3
@@ -41,7 +40,6 @@ def test_predict_one():
         ('language', 'nn'),  # これをnn
         ('processing', 'nn'),  # これをnnと予測できるとよさそう
         ('.', '.'),
-        ('</s>', '</s>'),
     ]
     probs = pt.load_probs('tests/probs.json')
     pred = pt.predict_one(test, probs)
