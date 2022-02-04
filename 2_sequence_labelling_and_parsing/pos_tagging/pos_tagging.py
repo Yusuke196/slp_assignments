@@ -40,12 +40,12 @@ def calc_cnts(train: list[list]) -> tuple[dict]:
 
 
 # 二次元の辞書の深い方の次元にある数値の列を対象に、確率への変換操作を繰り返す
-def calc_probs(cnts: tuple[dict], save: bool = False) -> list[dict]:
+def calc_probs(cnts: tuple[dict], save_path: str = '') -> list[dict]:
     tra_cnt, emi_cnt, tag_cnt = cnts
+    # interpolationで使用するNを、ここではtrainに含まれるtokenのユニーク数とする
     uniq_tokens = set()
     for dct in emi_cnt.values():
         uniq_tokens |= set(dct.keys())
-    # interpolationで使用するNを、ここではtrainに含まれるtokenのユニーク数とする
     n = len(uniq_tokens)
 
     # transition_prob, emission_prob, unitag_probの順で追加していく
@@ -55,8 +55,8 @@ def calc_probs(cnts: tuple[dict], save: bool = False) -> list[dict]:
     utag_prob = {tag: cnt / total for tag, cnt in tag_cnt.items()}
     probs.append(utag_prob)
 
-    if save:
-        with open('models/probs.json', 'w') as file:
+    if save_path != '':
+        with open(save_path, 'w') as file:
             json.dump(probs, file, indent=4)
     return probs
 
@@ -64,6 +64,7 @@ def calc_probs(cnts: tuple[dict], save: bool = False) -> list[dict]:
 def _calc_prob(cnt: dict[str, dict], transition=True, n=None) -> dict[str, dict]:
     prob = {}
     lambd = 0.7
+    # pprint(f'{n = }')
 
     for k, dct in cnt.items():
         total = sum(dct.values())
@@ -81,7 +82,7 @@ def load_probs(path):
         return json.load(file)
 
 
-def predict_one(sent: list[tuple], probs: list[dict]):
+def predict_one(sent: list[tuple], probs: list[dict]) -> list[str]:
     tra_prob, emi_prob, utag_prob = probs
     uniq_tag = set(utag_prob.keys())
     best_score = []
@@ -116,7 +117,8 @@ def predict_one(sent: list[tuple], probs: list[dict]):
     for w_i in range(len(sent) - 1, -1, -1):
         res.insert(0, tag_pred)
         tag_pred = prev_tags_for_best[w_i][tag_pred]
-    pprint(f'{res = }')
+    # pprint(f'{res = }')
+    return res
 
 
 def _log(num: float) -> float:
@@ -129,7 +131,7 @@ def _log(num: float) -> float:
 if __name__ == '__main__':
     train = load('data/wiki-en-train.norm_pos')
     cnts = calc_cnts(train)
-    probs = calc_probs(cnts, save=True)
+    probs = calc_probs(cnts, save_path='models/probs.json')
 
     test = load('data/wiki-en-test.norm_pos')[0]
     pprint(f'{test = }')
