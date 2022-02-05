@@ -19,8 +19,8 @@ def test_calc_probs():
             ('.', '.'),
         ]
     ]
-    lambd = 0.9
-    probs = pt.calc_probs(pt.calc_cnts(train), emi_lambd=lambd, save_path='tests/probs.json')
+    lambd = 0.95
+    probs = pt.fit(train, emi_lambd=lambd, save_path='tests/probs.json')
     tra_prob, emi_prob = probs
     n = 8
 

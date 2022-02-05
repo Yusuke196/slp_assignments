@@ -13,8 +13,14 @@ def load(path: str) -> list[list]:
     return res
 
 
+def fit(train: list[list], emi_lambd: float, save_path: str = '') -> list[dict]:
+    cnts = _calc_cnts(train)
+    probs = _calc_probs(cnts, emi_lambd=emi_lambd, save_path=save_path)
+    return probs
+
+
 # transition_probつまりP(t_i|t_{i-1})と、emission_probつまりP(o_i|t_i)を求めるための準備
-def calc_cnts(train: list[list]) -> tuple[dict]:
+def _calc_cnts(train: list[list]) -> tuple[dict]:
     transition_cnt = {}
     emission_cnt = {}
     for tpls in train:
@@ -35,7 +41,7 @@ def calc_cnts(train: list[list]) -> tuple[dict]:
 
 
 # 二次元の辞書の深い方の次元にある数値の列を対象に、確率への変換操作を繰り返す
-def calc_probs(cnts: tuple[dict], emi_lambd: float, save_path: str = '') -> list[dict]:
+def _calc_probs(cnts: tuple[dict], emi_lambd: float, save_path: str = '') -> list[dict]:
     tra_cnt, emi_cnt = cnts
     # interpolationで使用するNを、ここではtrainに含まれるtokenのユニーク数とする
     uniq_tokens = set()
@@ -98,12 +104,12 @@ def predict_one(sent: list[tuple], probs: list[dict]) -> list[str]:
                 max_score, prev_tag_for_max = max(lprobs)
                 best_score[w_i][tag] = max_score * ep
                 prev_tags_for_best[w_i][tag] = prev_tag_for_max
-    # pprint(f'{best_score[:2] = }')
-    # pprint(f'{prev_tags_for_best[:2] = }')
+    pprint(f'{best_score = }')
+    pprint(f'{prev_tags_for_best = }')
 
     scores_last_tag = best_score[len(sent) - 1]
     last_token_pred = max(scores_last_tag, key=scores_last_tag.get)
-    # pprint(f'{last_token_pred = }')  # </s>になってほしい
+    # pprint(f'{last_token_pred = }')  # .になってほしい
 
     res = []
     tag_pred = last_token_pred
@@ -123,8 +129,7 @@ def _log(num: float) -> float:
 
 if __name__ == '__main__':
     train = load('data/wiki-en-train.norm_pos')
-    cnts = calc_cnts(train)
-    probs = calc_probs(cnts, emi_lambd=0.7, save_path='models/probs.json')
+    probs = fit(train, emi_lambd=0.7, save_path='models/probs.json')
 
     test = load('data/wiki-en-test.norm_pos')[0]
     pprint(f'{test = }')
