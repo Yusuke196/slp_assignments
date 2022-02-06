@@ -116,7 +116,7 @@ def predict_one(sent: list[tuple], probs: list[dict]) -> list[str]:
     for w_i in range(len(sent) - 1, -1, -1):
         res.insert(0, tag_pred)
         tag_pred = prev_tags_for_best[w_i][tag_pred]
-    pprint(f'{res = }')
+    print(f'{res = }')
     return res
 
 
@@ -129,8 +129,8 @@ def _log(num: float) -> float:
 
 if __name__ == '__main__':
     train = load('data/wiki-en-train.norm_pos')
-    probs = fit(train, emi_lambd=0.7, save_path='models/probs.json')
+    probs = fit(train, emi_lambd=0.95, save_path='models/probs.json')
 
     test = load('data/wiki-en-test.norm_pos')[0]
-    pprint(f'{test = }')
+    pprint(test)
     predict_one(test, probs)
