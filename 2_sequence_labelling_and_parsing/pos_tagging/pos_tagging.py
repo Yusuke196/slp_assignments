@@ -47,11 +47,10 @@ def _calc_probs(cnts: tuple[dict], emi_lambd: float, save_path: str = '') -> lis
     uniq_tokens = set()
     for dct in emi_cnt.values():
         uniq_tokens |= set(dct.keys())
-    n = len(uniq_tokens)
 
     # transition_prob, emission_probの順で追加していく
     # tra_prob[t-1][t]にP(t|t-1)、emi_prob[t][w]にP(w|t)を記録
-    probs = [_calc_prob(tra_cnt), _calc_prob(emi_cnt, transition=False, lambd=emi_lambd, n=n)]
+    probs = [_calc_prob(tra_cnt), _calc_prob(emi_cnt, transition=False, lambd=emi_lambd)]
 
     if save_path != '':
         with open(save_path, 'w') as file:
@@ -60,16 +59,17 @@ def _calc_probs(cnts: tuple[dict], emi_lambd: float, save_path: str = '') -> lis
 
 
 def _calc_prob(
-    cnt: dict[str, dict], transition: bool = True, lambd: float = None, n: int = None
+    cnt: dict[str, dict], transition: bool = True, lambd: float = None
 ) -> dict[str, dict]:
     prob = {}
-    # pprint(f'{n = }')
 
     for k, dct in cnt.items():
         total = sum(dct.values())
         if transition:
             prob[k] = {token: cnt / total for token, cnt in dct.items()}
         else:
+            # ここで足している1は、UNKの分。これをvocab sizeとして使う
+            n = len(dct) + 1
             # emission_probについては、interpolationによるsmoothingを実行
             prob[k] = {token: lambd * cnt / total + (1 - lambd) / n for token, cnt in dct.items()}
             prob[k].update({'<UNK>': (1 - lambd) / n})
@@ -104,8 +104,8 @@ def predict_one(sent: list[tuple], probs: list[dict]) -> list[str]:
                 max_score, prev_tag_for_max = max(lprobs)
                 best_score[w_i][tag] = max_score * ep
                 prev_tags_for_best[w_i][tag] = prev_tag_for_max
-    pprint(f'{best_score = }')
-    pprint(f'{prev_tags_for_best = }')
+    # pprint(f'{best_score = }')
+    # pprint(f'{prev_tags_for_best = }')
 
     scores_last_tag = best_score[len(sent) - 1]
     last_token_pred = max(scores_last_tag, key=scores_last_tag.get)

@@ -22,11 +22,10 @@ def test_calc_probs():
     lambd = 0.95
     probs = pt.fit(train, emi_lambd=lambd, save_path='tests/probs.json')
     tra_prob, emi_prob = probs
-    n = 8
 
     assert tra_prob['<s>']['vbp'] == 1
     assert tra_prob['nn']['in'] == 1 / 3
-    assert emi_prob['nn']['article'] == lambd * 1 / 3 + (1 - lambd) / n
+    assert emi_prob['nn']['article'] == lambd * 1 / 3 + (1 - lambd) / (len(emi_prob['nn']))
 
 
 def test_predict_one():
