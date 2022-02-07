@@ -81,6 +81,19 @@ def load_probs(path):
         return json.load(file)
 
 
+def predict_all(sents: list[list], probs):
+    res_all = []
+    correct_cnt = 0
+    total_cnt = 0
+    for sent in sents:
+        res, ans = predict_one(sent, probs)
+        res_all.append(res)
+        lst = [x == y for x, y in zip(res, ans)]
+        correct_cnt += sum(lst)
+        total_cnt += len(lst)
+    return res_all, correct_cnt / total_cnt
+
+
 def predict_one(sent: list[tuple], probs: list[dict]) -> list[str]:
     best_score, prev_tags_for_best = _forward(sent, probs)
     scores_last_tag = best_score[len(sent) - 1]
@@ -95,8 +108,8 @@ def predict_one(sent: list[tuple], probs: list[dict]) -> list[str]:
         tag_pred = prev_tags_for_best[w_i][tag_pred]
 
     ans = [tpl[1] for tpl in sent]  # accuracyの計算用に、正答も返す
-    print(f'{ans = }')
-    print(f'{res = }')
+    # print(f'{ans = }')
+    # print(f'{res = }')
     return res, ans
 
 
@@ -139,5 +152,7 @@ if __name__ == '__main__':
     train = load('data/wiki-en-train.norm_pos')
     probs = fit(train, emi_lambd=0.95, save_path='models/probs.json')
 
-    test = load('data/wiki-en-test.norm_pos')[0]
-    predict_one(test, probs)
+    test = load('data/wiki-en-test.norm_pos')
+    # predict_one(test[0], probs)
+    pred_all, acc = predict_all(test, probs)
+    print(f'{acc = }')
