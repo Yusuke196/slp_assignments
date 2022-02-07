@@ -82,42 +82,47 @@ def load_probs(path):
 
 
 def predict_one(sent: list[tuple], probs: list[dict]) -> list[str]:
-    tra_prob, emi_prob = probs
-    uniq_tag = set(tra_prob.keys())
-    best_score = []
-    prev_tags_for_best = []
-
-    for w_i in range(len(sent)):
-        best_score.append({key: -np.inf for key in uniq_tag})
-        prev_tags_for_best.append({key: None for key in uniq_tag})
-        for tag in uniq_tag:
-            if w_i == 0:
-                best_score[w_i][tag] = _log(emi_prob[tag].get(sent[w_i][0], 0))
-            else:
-                lprobs = []
-                for prev_tag in uniq_tag:
-                    # P(w|t)P(t|t-1)
-                    prev_score = best_score[w_i - 1][prev_tag]
-                    tp = tra_prob[prev_tag].get(tag, 0)
-                    lprobs.append((prev_score + _log(tp), prev_tag))
-                ep = emi_prob[tag].get(sent[w_i][0], emi_prob[tag]['<UNK>'])
-                max_score, prev_tag_for_max = max(lprobs)
-                best_score[w_i][tag] = max_score * ep
-                prev_tags_for_best[w_i][tag] = prev_tag_for_max
-    # pprint(f'{best_score = }')
-    # pprint(f'{prev_tags_for_best = }')
-
+    best_score, prev_tags_for_best = _forward(sent, probs)
     scores_last_tag = best_score[len(sent) - 1]
     last_token_pred = max(scores_last_tag, key=scores_last_tag.get)
     # pprint(f'{last_token_pred = }')  # .になってほしい
 
     res = []
     tag_pred = last_token_pred
+    # w_iをlen(sent) - 1から1ずつ減らしていく
     for w_i in range(len(sent) - 1, -1, -1):
         res.insert(0, tag_pred)
         tag_pred = prev_tags_for_best[w_i][tag_pred]
     print(f'{res = }')
     return res
+
+
+def _forward(sent: list[tuple], probs: list[dict]):
+    tra_prob, emi_prob = probs
+    uniq_tag = set(tra_prob.keys())
+
+    best_score = []
+    prev_tags_for_best = []
+    for w_i in range(len(sent)):
+        best_score.append({key: -np.inf for key in uniq_tag})
+        prev_tags_for_best.append({key: None for key in uniq_tag})
+        for tag in uniq_tag:
+            ep = _log(emi_prob[tag].get(sent[w_i][0], emi_prob[tag]['<UNK>']))
+            if w_i == 0:
+                best_score[w_i][tag] = ep
+            else:
+                scores_and_prev_tags = []
+                for prev_tag in uniq_tag:
+                    # P(w|t)P(t|t-1)
+                    prev_score = best_score[w_i - 1][prev_tag]
+                    tp = tra_prob[prev_tag].get(tag, 0)
+                    scores_and_prev_tags.append((prev_score + _log(tp), prev_tag))
+                max_score, prev_tag_for_max = max(scores_and_prev_tags)
+                best_score[w_i][tag] = max_score + ep
+                prev_tags_for_best[w_i][tag] = prev_tag_for_max
+    print('best_score:')
+    pprint(best_score)
+    return best_score, prev_tags_for_best
 
 
 def _log(num: float) -> float:

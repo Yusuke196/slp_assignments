@@ -1,5 +1,5 @@
 import pytest
-from pprint import pprint
+import numpy as np
 import sys
 
 sys.path.append('..')
@@ -28,8 +28,9 @@ def test_calc_probs():
     assert emi_prob['nn']['article'] == lambd * 1 / 3 + (1 - lambd) / (len(emi_prob['nn']))
 
 
-def test_predict_one():
-    test = [
+@pytest.fixture()
+def test():
+    yield [
         ('<s>', '<s>'),
         ('See', 'vbp'),
         ('the', 'dt'),
@@ -40,9 +41,22 @@ def test_predict_one():
         ('processing', 'nn'),  # これをnnと予測できるとよさそう
         ('.', '.'),
     ]
+
+
+def test_forward(test):
+    probs = pt.load_probs('tests/probs.json')
+    best_score, prev_tags_for_best = pt._forward(test, probs)
+    # P_emi(<s>|<s> as pos) = 0.975
+    assert best_score[0]['<s>'] == np.log(0.975)
+    # P_tra(vbp|<s>) = 1, P_emi(See|vbp) = 0.975
+    assert best_score[1]['vbp'] == np.log(0.975) + pt._log(1) + pt._log(0.975)
+    assert prev_tags_for_best[1]['vbp'] == '<s>'
+
+
+def test_predict_one(test):
     probs = pt.load_probs('tests/probs.json')
     pred = pt.predict_one(test, probs)
     ans = [tpl[1] for tpl in test]
     print('')
-    pprint(f'{ans = }')
-    pprint(f'{pred = }')
+    print(f'{ans = }')
+    print(f'{pred = }')
