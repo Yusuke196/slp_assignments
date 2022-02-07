@@ -55,8 +55,5 @@ def test_forward(test):
 
 def test_predict_one(test):
     probs = pt.load_probs('tests/probs.json')
-    pred = pt.predict_one(test, probs)
-    ans = [tpl[1] for tpl in test]
-    print('')
-    print(f'{ans = }')
-    print(f'{pred = }')
+    pred, ans = pt.predict_one(test, probs)
+    assert pred[:2] == ans[:2]  # 最初の3つは正しい品詞を予測していることを確認

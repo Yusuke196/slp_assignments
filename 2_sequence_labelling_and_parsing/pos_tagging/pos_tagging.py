@@ -93,8 +93,11 @@ def predict_one(sent: list[tuple], probs: list[dict]) -> list[str]:
     for w_i in range(len(sent) - 1, -1, -1):
         res.insert(0, tag_pred)
         tag_pred = prev_tags_for_best[w_i][tag_pred]
+
+    ans = [tpl[1] for tpl in sent]  # accuracyの計算用に、正答も返す
+    print(f'{ans = }')
     print(f'{res = }')
-    return res
+    return res, ans
 
 
 def _forward(sent: list[tuple], probs: list[dict]):
@@ -120,8 +123,8 @@ def _forward(sent: list[tuple], probs: list[dict]):
                 max_score, prev_tag_for_max = max(scores_and_prev_tags)
                 best_score[w_i][tag] = max_score + ep
                 prev_tags_for_best[w_i][tag] = prev_tag_for_max
-    print('best_score:')
-    pprint(best_score)
+    # print('best_score:')
+    # pprint(best_score)
     return best_score, prev_tags_for_best
 
 
@@ -137,5 +140,4 @@ if __name__ == '__main__':
     probs = fit(train, emi_lambd=0.95, save_path='models/probs.json')
 
     test = load('data/wiki-en-test.norm_pos')[0]
-    pprint(test)
     predict_one(test, probs)
