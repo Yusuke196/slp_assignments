@@ -150,9 +150,9 @@ def _log(num: float) -> float:
 
 if __name__ == '__main__':
     train = load('data/wiki-en-train.norm_pos')
-    probs = fit(train, emi_lambd=0.95, save_path='models/probs.json')
-
-    test = load('data/wiki-en-test.norm_pos')
-    # predict_one(test[0], probs)
-    pred_all, acc = predict_all(test, probs)
-    print(f'{acc = }')
+    for emi_lambd in [0.9999, 0.99999, 0.999999, 0.9999999]:
+        probs = fit(train, emi_lambd=emi_lambd)  # , save_path='models/probs.json')
+        test = load('data/wiki-en-test.norm_pos')
+        # predict_one(test[0], probs)
+        pred_all, acc = predict_all(test, probs)
+        print(f'{emi_lambd}: {acc = }')
