@@ -24,7 +24,6 @@ def _calc_cnts(train: list[list]) -> tuple[dict]:
     transition_cnt = {}
     emission_cnt = {}
     for tpls in train:
-        # 高速化の余地があるが、可読性を損ないそうなので差し当たりは現状維持
         for i in range(1, len(tpls)):
             prev_tag = tpls[i - 1][1]
             tag = tpls[i][1]
@@ -86,19 +85,18 @@ def predict_all(sents: list[list], probs):
     correct_cnt = 0
     total_cnt = 0
     for sent in sents:
-        res, ans = predict_one(sent, probs)
+        res, corr = _predict_one(sent, probs)
         res_all.append(res)
-        lst = [x == y for x, y in zip(res, ans)]
+        lst = [x == y for x, y in zip(res, corr)]
         correct_cnt += sum(lst)
         total_cnt += len(lst)
     return res_all, correct_cnt / total_cnt
 
 
-def predict_one(sent: list[tuple], probs: list[dict]) -> list[str]:
+def _predict_one(sent: list[tuple], probs: list[dict]) -> list[str]:
     best_score, prev_tags_for_best = _forward(sent, probs)
     scores_last_tag = best_score[len(sent) - 1]
     last_token_pred = max(scores_last_tag, key=scores_last_tag.get)
-    # pprint(f'{last_token_pred = }')  # .になってほしい
 
     res = []
     tag_pred = last_token_pred
@@ -107,10 +105,11 @@ def predict_one(sent: list[tuple], probs: list[dict]) -> list[str]:
         res.insert(0, tag_pred)
         tag_pred = prev_tags_for_best[w_i][tag_pred]
 
-    ans = [tpl[1] for tpl in sent]  # accuracyの計算用に、正答も返す
-    # print(f'{ans = }')
+    # accuracyの計算用に、正答も返す
+    corr = [tpl[1] for tpl in sent]
+    # print(f'{corr = }')
     # print(f'{res = }')
-    return res, ans
+    return res, corr
 
 
 def _forward(sent: list[tuple], probs: list[dict]):
@@ -129,7 +128,6 @@ def _forward(sent: list[tuple], probs: list[dict]):
             else:
                 scores_and_prev_tags = []
                 for prev_tag in uniq_tag:
-                    # P(w|t)P(t|t-1)
                     prev_score = best_score[w_i - 1][prev_tag]
                     tp = tra_prob[prev_tag].get(tag, 0)
                     scores_and_prev_tags.append((prev_score + _log(tp), prev_tag))
@@ -150,9 +148,8 @@ def _log(num: float) -> float:
 
 if __name__ == '__main__':
     train = load('data/wiki-en-train.norm_pos')
-    for emi_lambd in [0.9999, 0.99999, 0.999999, 0.9999999]:
-        probs = fit(train, emi_lambd=emi_lambd)  # , save_path='models/probs.json')
-        test = load('data/wiki-en-test.norm_pos')
-        # predict_one(test[0], probs)
-        pred_all, acc = predict_all(test, probs)
-        print(f'{emi_lambd}: {acc = }')
+    emi_lambd = 0.999999
+    probs = fit(train, emi_lambd=emi_lambd, save_path='models/probs.json')
+    test = load('data/wiki-en-test.norm_pos')
+    pred_all, acc = predict_all(test, probs)
+    print(f'{emi_lambd}: {acc = }')

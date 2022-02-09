@@ -55,5 +55,17 @@ def test_forward(test):
 
 def test_predict_one(test):
     probs = pt.load_probs('tests/probs.json')
-    pred, ans = pt.predict_one(test, probs)
+    pred, ans = pt._predict_one(test, probs)
     assert pred[:2] == ans[:2]  # 最初の3つは正しい品詞を予測していることを確認
+
+
+@pytest.mark.skip()
+def test_predict_one_real_data(test):
+    train = pt.load('data/wiki-en-train.norm_pos')
+    test = pt.load('data/wiki-en-test.norm_pos')
+    emi_lambd = 0.9999
+    probs = pt.fit(train, emi_lambd=emi_lambd)
+    res, corr = pt._predict_one(test[0], probs)
+    print('')
+    print(f'{res = }')
+    print(f'{corr = }')
