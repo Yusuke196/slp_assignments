@@ -80,13 +80,16 @@ def load_probs(path):
         return json.load(file)
 
 
-def predict_all(sents: list[list], probs):
+def predict(sents: list[list], probs):
     res_all = []
     correct_cnt = 0
     total_cnt = 0
     for sent in sents:
         res, corr = _predict_one(sent, probs)
-        res_all.append(res)
+        # gradepos.plで評価できる形に変形
+        res_str = ' '.join([tag.upper() for tag in res[1:]])
+        res_all.append(res_str)
+        # accuracyを計算
         lst = [x == y for x, y in zip(res, corr)]
         correct_cnt += sum(lst)
         total_cnt += len(lst)
@@ -151,5 +154,8 @@ if __name__ == '__main__':
     emi_lambd = 0.999999
     probs = fit(train, emi_lambd=emi_lambd, save_path='models/probs.json')
     test = load('data/wiki-en-test.norm_pos')
-    pred_all, acc = predict_all(test, probs)
-    print(f'{emi_lambd}: {acc = }')
+    pred, acc = predict(test, probs)
+    # print(f'{emi_lambd}: {acc = }')
+
+    with open('eval/pred.txt', 'w') as f:
+        f.write('\n'.join(pred))
