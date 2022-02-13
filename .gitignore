@@ -5,3 +5,4 @@ venv
 memo.*
 sandbox.ipynb
 */*/data/*
+2_sequence_labelling_and_parsing/depend_parsing/models/*
