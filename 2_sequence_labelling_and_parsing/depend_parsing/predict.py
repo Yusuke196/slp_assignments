@@ -1,3 +1,4 @@
+import argparse
 import numpy as np
 import pandas as pd
 import pickle
@@ -6,8 +7,15 @@ from preprocess import extract_feats, get_buffer_head
 from train import load_data
 
 
-def load_svc(feat_of_clf: str):
-    with open(f'models/svc_{feat_of_clf}.pickle', 'rb') as file:
+def main(args):
+    test = load_data('data/mstparser-en-test.dep')
+    feat_of_clf = 'all_feat'
+    clf = load_svc(args.kernel, feat_of_clf)
+    predict(test, clf, feat_of_clf, write=True)
+
+
+def load_svc(kernel: str, feat_of_clf: str):
+    with open(f'models/svc_{kernel}_{feat_of_clf}.pickle', 'rb') as file:
         return pickle.load(file)
 
 
@@ -19,11 +27,11 @@ def predict(
         pred_heads = _predict_sent(sent, clf, feat_of_clf)
         res.append(pred_heads)
     if write:
-        write_res(res, feat_of_clf, is_test)
+        write_res(res, clf.kernel, feat_of_clf, is_test)
     return res
 
 
-def write_res(res: list[list], feat_of_clf: str, is_test: bool):
+def write_res(res: list[list], kernel: str, feat_of_clf: str, is_test: bool):
     output = ''
     for pred_heads in res:
         for idx, pred_head in enumerate(pred_heads[1:], 1):
@@ -32,9 +40,9 @@ def write_res(res: list[list], feat_of_clf: str, is_test: bool):
         output += '\n'
 
     if is_test:
-        path = f'eval/sample_pred_{feat_of_clf}.txt'
+        path = f'eval/sample_pred_{kernel}_{feat_of_clf}.txt'
     else:
-        path = f'eval/pred_{feat_of_clf}.txt'
+        path = f'eval/pred_{kernel}_{feat_of_clf}.txt'
     with open(path, 'w') as file:
         # 最後の'\n'は評価時にエラーの元になるので[:-1]で弾く
         file.write(output[:-1])
@@ -90,7 +98,7 @@ def _predict_one(feats: dict, clf) -> str:
 
 
 if __name__ == '__main__':
-    test = load_data('data/mstparser-en-test.dep')
-    feat_of_clf = 'all_feat'
-    clf = load_svc(feat_of_clf)
-    predict(test, clf, feat_of_clf, write=True)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--kernel', help='kernel of the SVC, e.g., rbf or poly')
+    args = parser.parse_args()
+    main(args)
