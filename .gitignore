@@ -1,5 +1,7 @@
 __pycache__
 .ipynb_checkpoints
-memo.md
+.pytest_cache
+venv
+memo.*
 sandbox.ipynb
-neubig_slides
+*/*/data/*
