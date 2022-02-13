@@ -99,6 +99,6 @@ def test_head():
 def test_predict_allfeat(test_head):
     feat_of_clf = 'all_feat'
     clf = prd.load_svc(feat_of_clf)
-    lst_pred_heads = prd.predict(test_head, clf, feat_of_clf, write=True)
+    lst_pred_heads = prd.predict(test_head, clf, feat_of_clf, write=True, is_test=True)
     print(f'{lst_pred_heads = }')
     assert len(lst_pred_heads) == 3

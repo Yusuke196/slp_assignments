@@ -5,22 +5,25 @@ from sklearn.svm import SVC
 from preprocess import extract_feats, get_buffer_head
 from train import load_data
 
+
 def load_svc(feat_of_clf: str):
     with open(f'models/svc_{feat_of_clf}.pickle', 'rb') as file:
         return pickle.load(file)
 
 
-def predict(test: list[dict], clf: SVC, feat_of_clf: str, write=False) -> list[list]:
+def predict(
+    test_data: list[dict], clf: SVC, feat_of_clf: str, write=False, is_test=False
+) -> list[list]:
     res = []
-    for sent in test:
+    for sent in test_data:
         pred_heads = _predict_sent(sent, clf, feat_of_clf)
         res.append(pred_heads)
     if write:
-        write_res(res, feat_of_clf)
+        write_res(res, feat_of_clf, is_test)
     return res
 
 
-def write_res(res: list[list], feat_of_clf: str):
+def write_res(res: list[list], feat_of_clf: str, is_test: bool):
     output = ''
     for pred_heads in res:
         for idx, pred_head in enumerate(pred_heads[1:], 1):
@@ -28,7 +31,11 @@ def write_res(res: list[list], feat_of_clf: str):
             output += f'{idx}\t_\t_\t_\t_\t_\t{pred_head}\t_\n'
         output += '\n'
 
-    with open(f'eval/pred_{feat_of_clf}.txt', 'w') as file:
+    if is_test:
+        path = f'eval/sample_pred_{feat_of_clf}.txt'
+    else:
+        path = f'eval/pred_{feat_of_clf}.txt'
+    with open(path, 'w') as file:
         # 最後の'\n'は評価時にエラーの元になるので[:-1]で弾く
         file.write(output[:-1])
 
