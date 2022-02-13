@@ -1,7 +1,16 @@
+import argparse
 import pandas as pd
 from sklearn.svm import SVC
 import pickle
 from preprocess import preprocess
+
+
+def main(args):
+    path = 'data/mstparser-en-train.dep'
+    train = load_data(path)
+    feat_type = 'all_feat'
+    train_X, train_y = preprocess(train, feat_type=feat_type)
+    build_svc(train_X, train_y, args.kernel, save=True, feat_type=feat_type)
 
 
 def load_data(path: str) -> list[dict]:
@@ -26,19 +35,17 @@ def load_data(path: str) -> list[dict]:
         return res
 
 
-def build_svc(X: pd.DataFrame, y: pd.Series, svc_kernel, save=False, feat_type='') -> SVC:
-    clf = SVC()
+def build_svc(X: pd.DataFrame, y: pd.Series, svc_kernel: str, save=False, feat_type='') -> SVC:
+    clf = SVC(kernel=svc_kernel)
     clf.fit(X, y)
     if save:
-        with open(f'models/svc_{feat_type}.pickle', 'wb') as file:
+        with open(f'models/svc_{svc_kernel}_{feat_type}.pickle', 'wb') as file:
             pickle.dump(clf, file)
     return clf
 
 
 if __name__ == '__main__':
-    path = 'data/mstparser-en-train.dep'
-    train = load_data(path)
-    feat_type = 'all_feat'
-    train_X, train_y = preprocess(train, feat_type=feat_type)
-    svc_kernel = 'poly'
-    build_svc(train_X, train_y, svc_kernel, save=True, feat_type=feat_type)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--kernel', help='kernel of the SVC, e.g., rbf or poly')
+    args = parser.parse_args()
+    main(args)
