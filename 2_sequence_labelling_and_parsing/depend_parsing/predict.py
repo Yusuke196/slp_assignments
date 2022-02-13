@@ -24,7 +24,7 @@ def write_res(res: list[list], feat_of_clf: str):
     output = ''
     for pred_heads in res:
         for idx, pred_head in enumerate(pred_heads[1:], 1):
-            # 予測すべき対象はpred_headだけ。究極的にはそれだけあればよい
+            # 予測すべき対象はpred_headだけ。究極的にはidxも要らない
             output += f'{idx}\t_\t_\t_\t_\t_\t{pred_head}\t_\n'
         output += '\n'
 
@@ -61,24 +61,14 @@ def _predict_sent(sent: list[dict], clf, feat_of_clf: str) -> list[int]:
             if pred_action == 'Reduce L':
                 pred_heads[left['id']] = right['id']
                 stack.pop(-2)
-                # if len(stack) == 2:  # 必要なケースが出てくるかも
-                #     stack.append(buffer.pop(0))
             elif pred_action == 'Reduce R':
                 pred_heads[right['id']] = left['id']
                 stack.pop(-1)
-                # if len(stack) == 2:
-                #     stack.append(buffer.pop(0))
 
     return pred_heads
 
 
 def _predict_one(feats: dict, clf) -> str:
-    # encoded = np.zeros(clf.shape_fit_[1])
-    # for feat_name, feat in feats.items():
-    #     idx_to_be_1 = np.where(clf.feature_names_in_ == f'{feat_name}_{feat}')
-    #     encoded[idx_to_be_1] = 1
-    # return clf.predict(np.expand_dims(encoded, 0))
-
     # 逐次的に、かつtrainのfeatureと同じになるようにone hot encodeする（testデータの性質上、最初からまとめてencodingはおそらくできない）
     encoded = pd.DataFrame(columns=clf.feature_names_in_)
     # 0と指定している行の名は、0でなくても構わない
@@ -89,13 +79,6 @@ def _predict_one(feats: dict, clf) -> str:
             encoded.loc[0, f'{feat_name}_{feat}'] = 1
     pred = clf.predict(encoded)[0]
 
-    # try:
-    #     # predictの返り値は要素一つのarrayなので、中身を取り出してから返す
-    #     pred = clf.predict(encoded)[0]
-    # except ValueError as e:
-    #     # featが未知のものだった場合、こちらの処理が実行される
-    #     print('ValueError:', e)
-    #     pred = 'Shift'  # ここは恣意的に決めないといけない
     return pred
 
 
