@@ -1,4 +1,5 @@
 # TODO 本来はmoduleに合わせて分けたほうがよい
+import pandas as pd
 import pytest
 from pprint import pprint
 import sys
@@ -18,9 +19,11 @@ def test_load(train):
     assert set(train[0][0].keys()) == set(['id', 'token', 'pos', 'head'])
 
 
-# def test_preprocess(train):
-#     preprocessed = pp.preprocess(train)
-#     X, y = preprocessed
+def test_preprocess(train):
+    preprocessed = pp.preprocess(train)
+    X, y = preprocessed
+    # print(X.shape)
+    assert X.shape[0] == 10560
 
 
 def test_extract_feats():

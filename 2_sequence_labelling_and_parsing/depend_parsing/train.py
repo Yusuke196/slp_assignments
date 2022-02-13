@@ -1,3 +1,4 @@
+import pandas as pd
 from sklearn.svm import SVC
 import pickle
 from preprocess import preprocess
@@ -25,7 +26,7 @@ def load_data(path: str) -> list[dict]:
         return res
 
 
-def build_svc(X, y, save=False, feat_type='') -> SVC:
+def build_svc(X: pd.DataFrame, y: pd.Series, svc_kernel, save=False, feat_type='') -> SVC:
     clf = SVC()
     clf.fit(X, y)
     if save:
@@ -37,6 +38,7 @@ def build_svc(X, y, save=False, feat_type='') -> SVC:
 if __name__ == '__main__':
     path = 'data/mstparser-en-train.dep'
     train = load_data(path)
-    feat_type = 'all'
+    feat_type = 'all_feat'
     train_X, train_y = preprocess(train, feat_type=feat_type)
-    build_svc(train_X, train_y, save=True, feat_type=feat_type)
+    svc_kernel = 'poly'
+    build_svc(train_X, train_y, svc_kernel, save=True, feat_type=feat_type)
