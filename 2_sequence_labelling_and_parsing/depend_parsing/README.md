@@ -1,17 +1,3 @@
----
-jupyter:
-  jupytext:
-    text_representation:
-      extension: .md
-      format_name: markdown
-      format_version: '1.3'
-      jupytext_version: 1.13.6
-  kernelspec:
-    display_name: Python 3 (ipykernel)
-    language: python
-    name: python3
----
-
 # Report
 
 This directory is for a project to perform supervised dependency parsing.
@@ -30,7 +16,6 @@ Then parsing on the test data is done as follows.
 
 
 ## Results
-
 
 I made predictions using SVM classifiers. Their kernels and the resulting accuracies are:
 
@@ -61,12 +46,14 @@ wget https://raw.githubusercontent.com/neubig/nlptutorial/master/data/mstparser-
 
 
 ## Train
+
 ```
 python train.py --kernel=rbf/poly/linear
 ```
 
 
 ## Predict
+
 ```
 python predict.py --kernel=rbf/poly/linear
 ```
