@@ -2,10 +2,11 @@ import argparse
 import pandas as pd
 from sklearn.svm import SVC
 import pickle
+
 from preprocess import preprocess
 
 
-def main(args):
+def main(args: dict):
     path = 'data/mstparser-en-train.dep'
     train = load_data(path)
     feat_type = 'all_feat'

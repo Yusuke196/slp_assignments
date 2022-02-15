@@ -3,11 +3,12 @@ import numpy as np
 import pandas as pd
 import pickle
 from sklearn.svm import SVC
+
 from preprocess import extract_feats, get_buffer_head
 from train import load_data
 
 
-def main(args):
+def main(args: dict):
     test = load_data('data/mstparser-en-test.dep')
     feat_of_clf = 'all_feat'
     clf = load_svc(args.kernel, feat_of_clf)
@@ -48,7 +49,7 @@ def write_res(res: list[list], kernel: str, feat_of_clf: str, is_test: bool):
         file.write(output[:-1])
 
 
-def _predict_sent(sent: list[dict], clf, feat_of_clf: str) -> list[int]:
+def _predict_sent(sent: list[dict], clf: SVC, feat_of_clf: str) -> list[int]:
     stack = [{'id': 0, 'token': 'ROOT', 'pos': 'ROOT', 'head': -1}] * 2
     buffer = sent
     pred_heads = [np.nan] * (len(sent) + 1)
@@ -83,8 +84,8 @@ def _predict_sent(sent: list[dict], clf, feat_of_clf: str) -> list[int]:
     return pred_heads
 
 
-def _predict_one(feats: dict, clf) -> str:
-    # 逐次的に、かつtrainのfeatureと同じになるようにone hot encodeする（testデータの性質上、最初からまとめてencodingはおそらくできない）
+def _predict_one(feats: dict, clf: SVC) -> str:
+    # trainのfeatureと列の数や順序が同じになるようにone hot encodeする（testデータの性質上、最初からまとめてencodingはおそらくできない）
     encoded = pd.DataFrame(columns=clf.feature_names_in_)
     # 0と指定している行の名は、0でなくても構わない
     encoded.loc[0] = np.zeros(len(clf.feature_names_in_))
