@@ -4,4 +4,6 @@ __pycache__
 venv
 memo.*
 sandbox.ipynb
+README.ipynb
 */*/data/*
+2_sequence_labelling_and_parsing/depend_parsing/models/*

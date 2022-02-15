@@ -1,6 +1,5 @@
 import json
 import numpy as np
-from pprint import pprint
 
 
 def load(path: str) -> list[list]:
@@ -75,12 +74,12 @@ def _calc_prob(
     return prob
 
 
-def load_probs(path):
+def load_probs(path: str):
     with open(path) as file:
         return json.load(file)
 
 
-def predict(sents: list[list], probs):
+def predict(sents: list[list], probs: list[dict]) -> tuple[list, float]:
     res_all = []
     correct_cnt = 0
     total_cnt = 0
@@ -155,6 +154,7 @@ if __name__ == '__main__':
     probs = fit(train, emi_lambd=emi_lambd, save_path='models/probs.json')
     test = load('data/wiki-en-test.norm_pos')
     pred, acc = predict(test, probs)
+    # accは既存のスクリプトで計算できるので、ここでは出力しない
     # print(f'{emi_lambd}: {acc = }')
 
     with open('eval/pred.txt', 'w') as f:
