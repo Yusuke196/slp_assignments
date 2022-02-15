@@ -1,4 +1,4 @@
-# Part-of-speech tagging
+# Report
 
 This directory is for a project to perform supervised part-of-speech tagging.
 
@@ -13,9 +13,9 @@ where $P(w_i|t_i)$ is called emission probability and $P(t_i|t_{i - 1})$ transit
 
 $$ P(w_i|t_i) = \lambda P(w_i|t_i) + (1 - \lambda) \frac{1}{N_{t_i}} $$
 
-where $N_{t_i}$ is the vocabulary size calculated as the unique number of tokens emitted from $t_i$ plus $1$, which represents `<UNK>`.
+where $N_{t_i}$ is the vocabulary size calculated as the unique number of tokens emitted from $t_i$ plus $1$, which represents `<UNK>`. In order to solve the optimization problem based on these formulation, I employed Viterbi algorithm.
 
-To explore the appropriate value for $\lambda$, I conducted hyperparameter tuning using `tuning.py`. As a result, the highest accuracy was obtained when $\lambda = 0.99999$.
+Finally, to explore the appropriate value for $\lambda$, I conducted hyperparameter tuning using `tuning.py`. As a result, the highest accuracy was obtained when $\lambda = 0.99999$.
 
 ## Results
 
